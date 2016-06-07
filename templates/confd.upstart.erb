@@ -1,0 +1,16 @@
+# Confd Agent (Upstart unit)
+description "Confd Agent"
+start on (local-filesystems and net-device-up IFACE!=lo)
+stop on runlevel [06]
+
+env CONFD=<%= scope.lookupvar('confd::installdir') %>/confd
+env CONFIG=<%= scope.lookupvar('confd::confdir') %>
+
+
+script
+    exec sudo -u <%= scope.lookupvar('confd::user') %> -g <%= scope.lookupvar('confd::group') %> $CONFD -confdir $CONFIG <%= scope.lookupvar('confd::extra_options') %>
+end script
+
+respawn
+respawn limit 10 10
+kill timeout 10

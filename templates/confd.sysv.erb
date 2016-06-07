@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+#       /etc/rc.d/init.d/confd
+#
+#       Daemonize the confd agent.
+#
+# chkconfig:   2345 95 95
+# description: Populate config files with the values in Consul's KV store
+# processname: confd
+# pidfile: /var/run/confd/pidfile
+
+# Source function library.
+. /etc/init.d/functions
+
+CONFD=<%= scope.lookupvar('confd::installdir') %>/confd
+CONFIG=<%= scope.lookupvar('confd::confdir') %>
+PID_FILE=/var/run/confd/pidfile
+LOG_FILE=/var/log/confd
+
+[ -e /etc/sysconfig/confd ] && . /etc/sysconfig/confd
+
+start() {
+        echo -n "Starting confd: "
+        daemon --user=<%= scope.lookupvar('confd::user') %> \
+            --pidfile="$PID_FILE" \
+            "$CONFD" -confdir "$CONFIG" <%= scope.lookupvar('confd::extra_options') %> >> "$LOG_FILE" &
+        retcode=$?
+        touch /var/lock/subsys/confd
+        return $retcode
+}
+
+stop() {
+        echo -n "Shutting down confd: "
+        "$CONFD" leave
+
+        retcode=$?
+        rm -f /var/lock/subsys/confd
+        return $retcode
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        "$CONFD" info
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    reload)
+        kill -HUP `cat $PID_FILE`
+        ;;
+    condrestart)
+        [ -f /var/lock/subsys/confd ] && restart || :
+        ;;
+    *)
+        echo "Usage: confd {start|stop|status|reload|restart}"
+        exit 1
+        ;;
+esac
+exit $?

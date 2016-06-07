@@ -1,0 +1,18 @@
+[Unit]
+Description=Confd Template Daemon
+Wants=basic.target
+After=basic.target network.target
+
+[Service]
+User=<%= scope.lookupvar('confd::user') %>
+Group=<%= scope.lookupvar('confd::group') %>
+ExecStart=<%= scope.lookupvar('confd::installdir') %>/confd \
+  -confdir=<%= scope.lookupvar('confd::confdir') %> <%= scope.lookupvar('confd::extra_options') %>
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=10s
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

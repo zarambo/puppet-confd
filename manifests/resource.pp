@@ -7,6 +7,7 @@ define confd::resource(
   # required
   $dest,
   $keys,
+  $template,
   $ensure     = present,
   $src        = "${name}.tmpl",
   # optional
@@ -28,7 +29,7 @@ define confd::resource(
   if $reload_cmd { validate_string($reload_cmd) }
   if $check_cmd { validate_string($check_cmd) }
   if $prefix { validate_string($prefix) }
-  if $mode { validate_re($mode, '^\d+')}
+  if $mode { validate_re($mode, '^\d+') }
 
   $resourcefile = "${confd::confdir}/conf.d/${name}.toml"
 
@@ -36,6 +37,16 @@ define confd::resource(
     ensure  => $ensure,
     owner   => 'root',
     mode    => '0640',
+    notify  => Service['confd'],
     content => template('confd/resource.toml.erb'),
+  }
+
+  file { "${confd::confdir}/templates/${src}":
+    ensure  => 'file',
+    content => $template,
+    owner   => 'root',
+    mode    => '0640',
+    require => File["${confd::confdir}/templates"],
+    notify  => Service['confd'],
   }
 }

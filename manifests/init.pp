@@ -9,6 +9,10 @@ class confd(
 
   $confdir       = $confd::params::confdir,
   $nodes         = $confd::params::nodes,
+  $init_style    = $confd::params::init_style,
+  $user          = $confd::params::user,
+  $group         = $confd::params::group,
+  $extra_options = '',
   $backend       = undef,
   $debug         = undef,
   $client_cakeys = undef,
@@ -76,5 +80,6 @@ class confd(
 
   class { 'confd::install': } ->
   class { 'confd::config': } ->
+  class { 'confd::service': }
   Confd::Resource <||>
 }
